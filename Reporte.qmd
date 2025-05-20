@@ -1,0 +1,56 @@
+---
+title: "Reporte"
+format: html
+warning: False
+message: False
+echo: False
+---
+
+
+```{r}
+library(dplyr)
+library(readxl)
+library(epiR)
+library(stringr)
+```
+
+```{r}
+defunciones <- read.csv("Data/defweb23.csv", sep = ";")
+codigos_prov <- read_excel("Data/descdef1.xlsx", sheet = 2) |> 
+  mutate(CODIGO = as.numeric(CODIGO)) |> rename("PROVINCIA" = VALOR)
+pob_estandar <- read_excel("Data/c2_proyecciones_nac_2010_2040.xls", 
+                           range = c("A11:O31"), 
+                           col_names = F)
+
+pob_estandar <- select(pob_estandar, c(1,ncol(pob_estandar))) |> `colnames<-`(c("GRUPEDAD", "POBLACION")) 
+
+pob_estandar_agrup <- pob_estandar
+
+pob_estandar_agrup[2,] <- c("1-9", pob_estandar[1,2]+pob_estandar[2,2])
+pob_estandar_agrup <- pob_estandar_agrup[2:nrow(pob_estandar_agrup),]
+
+pob_estandar_agrup[16,] <- c("80-Inf", pob_estandar[17,2]+pob_estandar[18,2]+pob_estandar[19,2]+pob_estandar[20,2]+pob_estandar[21,2])
+pob_estandar_agrup <- pob_estandar_agrup[1:16,]
+  
+if (sum(pob_estandar_agrup$POBLACION) != sum(pob_estandar$POBLACION)) {print("OJO FLACO CON LAS BUENAS PRACTICAS")}
+```
+
+
+```{r}
+diabetes <- defunciones |> 
+  filter(CAUSA %in% c("E08", "E09", "E10","E11", "E12", "E13")) |> 
+  left_join(codigos_prov, by = join_by(ï..PROVRES == CODIGO)) |> 
+  mutate(
+    GRUPEDAD = case_when(str_detect(GRUPEDAD, "17_80") ~ "80-Inf",
+                                str_detect(GRUPEDAD, "02_1") ~ "1-9",
+                                str_detect(GRUPEDAD, " a ") ~ str_sub(str_replace(GRUPEDAD, " a ", "-"), start = 4)
+                                )
+         ) |> 
+  na.exclude() |> 
+  select(-c("SEXO", "CAUSA", "MAT", "ï..PROVRES")) |> 
+  group_by(PROVINCIA, GRUPEDAD) |> 
+  summarise(DEFUNCIONES = sum(CUENTA)) |> ungroup() |> 
+  filter(!PROVINCIA %in% c("Otro país", "Lugar no especificado"))
+
+```
+
