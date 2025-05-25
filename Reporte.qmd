@@ -9,10 +9,15 @@ echo: False
 
 ```{r}
 library(dplyr)
+library(tidyr)
 library(readxl)
 library(epiR)
 library(stringr)
 ```
+
+Se decidió estudiar la fatalidad del grupo de enfermedades asociadas a la diabetes, con códigos CIE10 de E08 a E13. Por la poca frecuencia que se da la muerte en grupos jóvenes, se tuvieron en cuenta únicamente a las personas mayores de 20 años, agrupandolas en grupos decenales hasta los 50 años, a partir del cúal se las agrupa quinquenalmente hasta los 80 años, juntando a todas las personas por encima de esta edad en un solo grupo.
+
+El ajuste de tasas se realizó por el método estándar.
 
 ```{r}
 defunciones <- read.csv("Data/defweb23.csv", sep = ";")
@@ -26,13 +31,30 @@ pob_estandar <- select(pob_estandar, c(1,ncol(pob_estandar))) |> `colnames<-`(c(
 
 pob_estandar_agrup <- pob_estandar
 
-pob_estandar_agrup[2,] <- c("1-9", pob_estandar[1,2]+pob_estandar[2,2])
+pob_estandar_agrup <- pob_estandar_agrup[5:nrow(pob_estandar_agrup),]
+
+pob_estandar_agrup[2,] <- c("20-29", pob_estandar_agrup[1,2]+pob_estandar_agrup[2,2])
 pob_estandar_agrup <- pob_estandar_agrup[2:nrow(pob_estandar_agrup),]
 
-pob_estandar_agrup[16,] <- c("80-Inf", pob_estandar[17,2]+pob_estandar[18,2]+pob_estandar[19,2]+pob_estandar[20,2]+pob_estandar[21,2])
-pob_estandar_agrup <- pob_estandar_agrup[1:16,]
+pob_estandar_agrup[2,] <- c("30-39", pob_estandar_agrup[2,2]+pob_estandar_agrup[3,2])
+pob_estandar_agrup[3,] <- c("40-49", pob_estandar_agrup[4,2]+pob_estandar_agrup[5,2])
+
+pob_estandar_agrup[4,] <- c(NA, NA)
+pob_estandar_agrup[5,] <- c(NA, NA)
+pob_estandar_agrup <- pob_estandar_agrup |> na.exclude()
+
+pob_estandar_agrup[10,1] <- "80-Inf"
+pob_estandar_agrup[10,2] <- sum(filter(pob_estandar, GRUPEDAD %in% c("80-84", "85-89", "90-94", "95-99", "100 y más"))$POBLACION)
+pob_estandar_agrup <- pob_estandar_agrup[1:10,]
   
-if (sum(pob_estandar_agrup$POBLACION) != sum(pob_estandar$POBLACION)) {print("OJO FLACO CON LAS BUENAS PRACTICAS")}
+pob_estandar_agrup$GRUPEDAD_num <- 1:nrow(pob_estandar_agrup)
+
+```
+
+```{r}
+pob_prov_agrup <- read_excel(path ="Data/Poblacion por provincia_agrupado.xlsx")
+pob_prov_agrup <- pob_prov_agrup |> 
+  left_join()
 ```
 
 
@@ -42,15 +64,45 @@ diabetes <- defunciones |>
   left_join(codigos_prov, by = join_by(ï..PROVRES == CODIGO)) |> 
   mutate(
     GRUPEDAD = case_when(str_detect(GRUPEDAD, "17_80") ~ "80-Inf",
-                                str_detect(GRUPEDAD, "02_1") ~ "1-9",
+                                str_detect(GRUPEDAD, "01_") ~ NA,
+                                str_detect(GRUPEDAD, "02_") ~ NA,
+                                str_detect(GRUPEDAD, "03_") ~ NA,
+                                str_detect(GRUPEDAD, "04_") ~ NA,
+                                str_detect(GRUPEDAD, "99_") ~ NA,
+                                str_detect(GRUPEDAD, "05_") ~ "20-29",
+                                str_detect(GRUPEDAD, "06_") ~ "20-29",
+                                str_detect(GRUPEDAD, "07_") ~ "30-39",
+                                str_detect(GRUPEDAD, "08_") ~ "30-39",
+                                str_detect(GRUPEDAD, "09_") ~ "40-49",
+                                str_detect(GRUPEDAD, "10_") ~ "40-49",
                                 str_detect(GRUPEDAD, " a ") ~ str_sub(str_replace(GRUPEDAD, " a ", "-"), start = 4)
                                 )
          ) |> 
   na.exclude() |> 
-  select(-c("SEXO", "CAUSA", "MAT", "ï..PROVRES")) |> 
+  filter(GRUPEDAD %in% pob_estandar_agrup$GRUPEDAD) |> 
+  select(-c("SEXO", "CAUSA", "MAT")) |> 
   group_by(PROVINCIA, GRUPEDAD) |> 
   summarise(DEFUNCIONES = sum(CUENTA)) |> ungroup() |> 
   filter(!PROVINCIA %in% c("Otro país", "Lugar no especificado"))
+
+
+diabetes_expand <- expand.grid(unique(codigos_prov$PROVINCIA)[1:(nrow(codigos_prov)-2)], unique(pob_estandar_agrup$GRUPEDAD)) |> `colnames<-`(c("PROVINCIA", "GRUPEDAD")) |> left_join(pob_estandar_agrup, by = join_by(GRUPEDAD == GRUPEDAD)) |> select(-POBLACION)
+
+diabetes_expand <- diabetes_expand |> 
+  left_join(diabetes, join_by(PROVINCIA, GRUPEDAD)) |> 
+  mutate(DEFUNCIONES = replace_na(DEFUNCIONES, 0)) |> 
+  left_join(codigos_prov, by = join_by(PROVINCIA)) |> 
+  left_join(pob_prov_agrup, by = join_by(CODIGO == PROVINCIA_NUM, GRUPEDAD))
+
+diabetes_expand |> group_by(PROVINCIA) |> summarise(dead = sum(DEFUNCIONES))
+
+```
+
+```{r}
+
+writexl::write_xlsx(diabetes_expand, path = "Data/diabetes.xlsx")
+writexl::write_xlsx(pob_estandar_agrup, path = "Data/pob_estandar.xlsx")
+
 
 ```
 
