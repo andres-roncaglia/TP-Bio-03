@@ -53,14 +53,12 @@ pob_estandar_agrup$GRUPEDAD_num <- 1:nrow(pob_estandar_agrup)
 
 ```{r}
 pob_prov_agrup <- read_excel(path ="Data/Poblacion por provincia_agrupado.xlsx")
-pob_prov_agrup <- pob_prov_agrup |> 
-  left_join()
 ```
 
 
 ```{r}
 diabetes <- defunciones |> 
-  filter(CAUSA %in% c("E08", "E09", "E10","E11", "E12", "E13")) |> 
+  filter(CAUSA %in% c("E08", "E09", "E10","E11", "E12", "E13", "E14")) |> 
   left_join(codigos_prov, by = join_by(ï..PROVRES == CODIGO)) |> 
   mutate(
     GRUPEDAD = case_when(str_detect(GRUPEDAD, "17_80") ~ "80-Inf",
@@ -94,7 +92,6 @@ diabetes_expand <- diabetes_expand |>
   left_join(codigos_prov, by = join_by(PROVINCIA)) |> 
   left_join(pob_prov_agrup, by = join_by(CODIGO == PROVINCIA_NUM, GRUPEDAD))
 
-diabetes_expand |> group_by(PROVINCIA) |> summarise(dead = sum(DEFUNCIONES))
 
 ```
 
