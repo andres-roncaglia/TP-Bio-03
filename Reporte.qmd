@@ -12,7 +12,57 @@ library(dplyr)
 library(tidyr)
 library(readxl)
 library(stringr)
+library(ggplot2)
+library(forcats)
 ```
+
+
+::: {.center data-latex=""}
+
+\vspace{3cm}
+
+```{r logo facultad, echo=F, include = T, out.width= "60%"}
+knitr::include_graphics("logounr.png")
+```
+
+\pagenumbering{gobble}
+
+\vspace{5cm}
+
+\Large
+**LICENCIATURA EN ESTADÍSTICA**
+
+\vspace{1cm}
+
+\Large
+**Estandarización de tasas**
+
+
+\vspace{0.3cm}
+\large
+
+*Bioestadística*
+
+\vspace{7cm}
+
+\large
+
+**Autores: Franco Santini - Andrés Roncaglia**
+
+**Docentes: Cristina Cuesta - Nora Arnesi**
+
+**2025**
+\normalsize
+\newpage
+\hypersetup{linkcolor = black}
+\tableofcontents
+
+
+\newpage
+\pagenumbering{arabic}
+
+:::
+
 
 # Introducción
 
@@ -143,7 +193,7 @@ diabetes_expand |>
   group_by(PROVINCIA) |> 
   summarise(total_esperado = sum(defunciones_esperadas),
             total_observado = sum(DEFUNCIONES)
-            )
+            ) 
 
 ```
 
@@ -182,13 +232,60 @@ Por el contrario, provincias con distribuciones más similes a la estándar no t
 
 Es importante aclararle al lector que las tasas estandarizadas no son tasas reales, sino que son herramientas para comparar entre poblaciones, en este caso se utiliza para comparar la mortalidad por diabetes entre provincias.
 
-(GRAFICO)
+```{r}
+pob_prov <- pob_prov_agrup |> 
+  left_join(codigos_prov, by = join_by(PROVINCIA_NUM == CODIGO)) |> 
+  group_by(PROVINCIA) |> 
+  summarise(Poblacion = sum(POBLACION),
+            Codigo = PROVINCIA_NUM[1]
+            )
+
+tasas_est |>
+  mutate(Provincia = row.names(tasas_est),
+         Provincia = if_else(str_detect(Provincia, "Ciudad"), "Ciudad Autónoma", Provincia),
+         Tasa = rep(c("Bruta", "Ajustada"), times = nrow(tasas_est)/2),
+         IC = rep(c("IC 95%"), times = nrow(tasas_est)),
+         Provincia = fct_reorder(Provincia, Tasa_bruta)
+         ) |> 
+  ggplot() +
+  aes(x = Tasa_bruta, y = Provincia, color = Tasa) +
+  geom_segment(aes(xend = IC_0.95_ls, x = IC_0.95_li), color = 'lightblue') +
+  geom_point(aes(x = IC_0.95_li),color = 'dodgerblue3', shape = '|', size = 3) +
+  geom_point(aes(x = IC_0.95_ls),color = 'dodgerblue3', shape = '|', size = 3) +
+  geom_segment(aes(xend = IC_0.95_ls, x = IC_0.95_li, color = IC)) +
+  geom_point(aes(x = Tasa_ajustada),color = 'dodgerblue3') +
+  geom_point(alpha = 1) +
+  geom_point(color = 'salmon') +
+  scale_color_manual(values = c("Bruta" = "salmon", "Ajustada" = "dodgerblue3", "IC 95%" = "lightblue")) +
+  labs(x = "Tasa de mortalidad por diabetes (por 100.000 habitantes)") +
+  theme_bw() +
+  theme(legend.position = "bottom")
+  
+```
+
+Es interesante ver que las tasas brutas de Mendoza y Santa Cruz son muy similares, pero en cambio las tasa ajustada de Santa Cruz es bastante mayor a la de Mendoza teniendo en cuenta las diferencias en las distribuciones etarias de ambas. 
 
 Para calcular la RME se utilizó como poblacion estándar la provincia de Buenos Aires, y los resultados se pueden encontrar en la  @tbl-rmebs. Se puede observar que el único lugar donde la RME es menor a Buenos Aires es la ciudad autónoma del mismo nombre, con lo que si no se tuviera la mortalidad en la ciudad autónoma, se podría pensar que el número de casos observados sería un 65% menor que el número de casos esperados si CABA tuviera la misma mortalidad por diabetes que Buenos Aires.
 
 En el otro extremo, si no se tuviera la mortalidad de Misiones y Formosa, se concluiría que el número de casos observados sería un 330% y 387% mayor que el número de casos esperados si tuvieran la misma mortalidad por diabetes que Buenos Aires respectivamente.
 
-(Grafico)
+```{r}
+rme_bs |> 
+  mutate(Comp = case_when(RME > 100 ~ "Mayor que BSAS",
+                          RME < 100 ~ "Menor que BSAS",
+                          RME == 100 ~ "BSAS"
+                          ),
+         Provincia = if_else(str_detect(Provincia, "Ciudad"), "Ciudad Autónoma", Provincia)
+         ) |> 
+  ggplot() +
+  aes(y = Provincia, x = RME, color = Comp) |> 
+  geom_point() + 
+  labs(x = "Razón de mortalidad por diabetes estandarizada", color = "RME") + 
+  scale_color_manual(values = c("Mayor que BSAS" = "salmon", "Menor que BSAS" = "dodgerblue3", "BSAS" = "black")) +
+  theme_bw() +
+  theme(legend.position = "bottom")
+```
+
 
 \newpage
 
@@ -196,7 +293,7 @@ En el otro extremo, si no se tuviera la mortalidad de Misiones y Formosa, se con
 
 ```{r}
 #| label: tbl-tasas
-#| tbl-cap: "Tasas estandarizadas por el método directo"
+#| tbl-cap: "Tasas estandarizadas (por 100.000 habitantes) por el método directo"
 
 kableExtra::kable(tasas_est, format = "pipe")
 ```
