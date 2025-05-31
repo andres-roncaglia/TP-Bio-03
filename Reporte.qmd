@@ -313,8 +313,10 @@ El código en R de como se realizó el trabajo y los conjuntos de datos utilizad
 
 En la carpeta "Data" se encuentran los siguientes archivos:
 
-- "defweb23.cvs" es el archivo del DEIS que contiene todas las defunciones en el año 2023.
+- "[defweb23.cvs](https://github.com/andres-roncaglia/TP-Bio-03/tree/main/Data)" es el archivo del DEIS que contiene todas las defunciones en el año 2023.
 
-- "pob_estandar.xlsx" es el archivo de la población en Argentina en el año 2023 agrupados por edad, este se construyó en base a las estimaciones del INDEC del mismo año.
+- "[pob_estandar.xlsx](https://github.com/andres-roncaglia/TP-Bio-03/tree/main/Data)" es el archivo de la población en Argentina en el año 2023 agrupados por edad, este se construyó en base a las estimaciones del INDEC del mismo año. También lo usamos para construir las tasas estandarizadas y las razones de mortalidad estandarizadas en Epidat.
 
-- "Población por provincia_agrupado.xlsx" es el archivo de la población en cada provincia de Argentina en el año 2023 agrupados por edad, este se construyó en base a las estimaciones del INDEC del mismo año.
+- "[Población por provincia_agrupado.xlsx](https://github.com/andres-roncaglia/TP-Bio-03/tree/main/Data)" es el archivo de la población en cada provincia de Argentina en el año 2023 agrupados por edad, este se construyó en base a las estimaciones del INDEC del mismo año.
+
+- "[diabetes.xlsx](https://github.com/andres-roncaglia/TP-Bio-03/tree/main/Data)" es el archivo que usamos para construir las tasas estandarizadas y las razones de mortalidad estandarizadas en Epidat.
