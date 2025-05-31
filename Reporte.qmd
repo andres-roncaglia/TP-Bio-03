@@ -66,13 +66,13 @@ knitr::include_graphics("logounr.png")
 
 # Introducción
 
-Se decidió estudiar la fatalidad del grupo de enfermedades asociadas a la diabetes en el año 2023, con códigos CIE10 de E08 a E14. Por la poca frecuencia que se da la muerte en grupos jóvenes, se tuvieron en cuenta únicamente a las personas mayores de 20 años, agrupandolas en grupos decenales hasta los 50 años, a partir del cúal se las agrupa quinquenalmente hasta los 80 años, juntando a todas las personas por encima de esta edad en un solo grupo.
+Se decidió estudiar la fatalidad del grupo de enfermedades asociadas a la diabetes en el año 2023, con códigos CIE10 de E08 a E14. Por la poca frecuencia que se da la muerte en grupos jóvenes, se tuvieron en cuenta únicamente a las personas mayores de 20 años, agrupándolas en grupos decenales hasta los 50 años, a partir del cual se las agrupa quinquenalmente hasta los 80 años, juntando a todas las personas por encima de esta edad en un solo grupo.
 
 Sin embargo, comparar las tasas de mortalidad entre provincias no sería correcto, dado que la distribución etaria de la población dentro de cada provincia puede variar mucho. Es por esto que se recurre a la estandarización de tasas, y lograr así una comparación más objetiva.
 
 # Procesamiento de datos
 
-En primer lugar se recolectaron los datos de las defunciones en 2023 por provincia y edad, para luego filtrar las causas relacionadas con los códigos CIE10 relacionados a la diabetes. Para la población estándar se usó la información de la población estimada en el mismo año. De la misma forma se obtuvo la población estimada por provincia y grupo etario. 
+En primer lugar, se recolectaron los datos de las defunciones en 2023 por provincia y edad, para luego filtrar las causas relacionadas con los códigos CIE10 relacionados a la diabetes. Para la población estándar se usó la información de la población estimada en el mismo año. De la misma forma se obtuvo la población estimada por provincia y grupo etario. 
 
 Por la ausencia de casos en muchos grupos etarios se decidió descartar y agrupar ciertos grupos etarios quinquenales, resultando en las siguientes categorías etarias:
 
@@ -174,7 +174,7 @@ pob_estandar_agrup$tasa_ba <- tasa_bs$Tasa*100000
 
 Posteriormente se calcularon las tasas de mortalidad observadas por grupo etario a nivel país y en la provincia de Buenos Aires, necesarias para el cálculo de la Razón de Mortalidad Estandarizada (RME).
 
-Los cálculos para la tasas de mortalidad estandarizadas ajustadas por edad por el método directo, y para el RME por el método indirecto se realizaron con el software Epidat versión 4.2.
+Los cálculos para las tasas de mortalidad estandarizadas ajustadas por edad por el método directo, y para el RME por el método indirecto se realizaron con el software Epidat versión 4.2.
 
 ```{r}
 
@@ -226,9 +226,9 @@ rme_bs <- read.delim(file = "Data/RME bsas.txt", encoding = "UTF-8") |>
          RME = as.numeric(str_replace(str_replace(RME, "[.]", ""), ",", ".")))
 ```
 
-La @tbl-tasas muestra la importancia de estandarizar las tasas. Si bien Tierra del Fuego, Santa Cruz y Misiones parecen tener tasas normales, siendo las 2 primeras incluso menores que en Mendoza o San Juan, al comparar las tasas estandarizadas se puede ver que son mayores, alejandose mucho de las tasas brutas. Esto se debe a la distribución poblacional en estas provincias, si bien se dan menos casos, estos pueden estar ocurriendo en grupos más jóvenes en relación al resto de provincias.
+La @tbl-tasas muestra la importancia de estandarizar las tasas. Si bien Tierra del Fuego, Santa Cruz y Misiones parecen tener tasas normales, siendo las 2 primeras incluso menores que en Mendoza o San Juan, al comparar las tasas estandarizadas se puede ver que son mayores, alejándose mucho de las tasas brutas. Esto se debe a la distribución poblacional en estas provincias, si bien se dan menos casos, estos pueden estar ocurriendo en grupos más jóvenes en relación al resto de provincias.
 
-Por el contrario, provincias con distribuciones más similes a la estándar no tienen mucha variación entre su tasa bruta y su tasa estandarizada, ejemplos de esto son Buenos Aires, Santa Fe, Córdoba. 
+Por el contrario, provincias con distribuciones más símiles a la estándar no tienen mucha variación entre su tasa bruta y su tasa estandarizada, ejemplos de esto son Buenos Aires, Santa Fe, Córdoba. 
 
 Es importante aclararle al lector que las tasas estandarizadas no son tasas reales, sino que son herramientas para comparar entre poblaciones, en este caso se utiliza para comparar la mortalidad por diabetes entre provincias.
 
@@ -263,9 +263,9 @@ tasas_est |>
   
 ```
 
-Es interesante ver que las tasas brutas de Mendoza y Santa Cruz son muy similares, pero en cambio las tasa ajustada de Santa Cruz es bastante mayor a la de Mendoza teniendo en cuenta las diferencias en las distribuciones etarias de ambas. 
+Es interesante ver que las tasas brutas de Mendoza y Santa Cruz son muy similares, pero en cambio la tasa ajustada de Santa Cruz es bastante mayor a la de Mendoza teniendo en cuenta las diferencias en las distribuciones etarias de ambas. 
 
-Para calcular la RME se utilizó como poblacion estándar la provincia de Buenos Aires, y los resultados se pueden encontrar en la  @tbl-rmebs. Se puede observar que el único lugar donde la RME es menor a Buenos Aires es la ciudad autónoma del mismo nombre, con lo que si no se tuviera la mortalidad en la ciudad autónoma, se podría pensar que el número de casos observados sería un 65% menor que el número de casos esperados si CABA tuviera la misma mortalidad por diabetes que Buenos Aires.
+Para calcular la RME se utilizó como población estándar la provincia de Buenos Aires, y los resultados se pueden encontrar en la  @tbl-rmebs. Se puede observar que el único lugar donde la RME es menor a Buenos Aires es la ciudad autónoma del mismo nombre, con lo que, si no se tuviera la mortalidad en la ciudad autónoma, se podría pensar que el número de casos observados sería un 65% menor que el número de casos esperados si CABA tuviera la misma mortalidad por diabetes que Buenos Aires.
 
 En el otro extremo, si no se tuviera la mortalidad de Misiones y Formosa, se concluiría que el número de casos observados sería un 330% y 387% mayor que el número de casos esperados si tuvieran la misma mortalidad por diabetes que Buenos Aires respectivamente.
 
@@ -306,3 +306,15 @@ kableExtra::kable(tasas_est, format = "pipe")
 
 kableExtra::kable(rme_bs, format = "pipe")
 ```
+
+\newpage
+
+El código en R de como se realizó el trabajo y los conjuntos de datos utilizados se pueden encontrar en el repositorio de github, haciendo [click aquí](https://github.com/andres-roncaglia/TP-Bio-03).
+
+En la carpeta "Data" se encuentran los siguientes archivos:
+
+- "defweb23.cvs" es el archivo del DEIS que contiene todas las defunciones en el año 2023.
+
+- "pob_estandar.xlsx" es el archivo de la población en Argentina en el año 2023 agrupados por edad, este se construyó en base a las estimaciones del INDEC del mismo año.
+
+- "Población por provincia_agrupado.xlsx" es el archivo de la población en cada provincia de Argentina en el año 2023 agrupados por edad, este se construyó en base a las estimaciones del INDEC del mismo año.
